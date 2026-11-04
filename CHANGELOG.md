@@ -1,3 +1,25 @@
+# 2.0.0 (2026-11-04)
+
+Breaking: fingerprints from 1.x won't match fingerprints from 2.0.
+
+- The default hash algorithm is now SHA-256. Pass `{ algorithm: 'md5' }`
+  to get MD5 hashes.
+- Add the `exclude` option to `generateFingerprint`.
+- Remove CPU speed from the data. On Linux it reports the current clock
+  speed, so the fingerprint changed depending on CPU load. `cpuInfo` is
+  replaced by `cpus`, a list of CPU model names.
+- Remove `homedir` and `tmpdir`. Both depend on environment variables.
+  `userInfo.homedir` is still included.
+- Remove `availableParallelism`. It depends on CPU affinity and container
+  limits.
+- Remove `EOL` and `devNull`. They're the same for every machine on the
+  same platform.
+- Remove the `CpuPartialInfo` type and add `FingerprintField` and
+  `FingerprintOptions`.
+- Add an `exports` map with separate ESM and CommonJS builds and types.
+- Build with esbuild instead of Rollup.
+- Require Node.js 18 or newer.
+
 # 1.6.0 (2023-06-10)
 
 Remove the downloads tag from `README.md`.

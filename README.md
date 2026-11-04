@@ -1,136 +1,117 @@
-## Server Side Fingerprint v1.6.0 Documentation
+# server-side-fingerprint
 
-<p align="center">
-  <a href="https://www.npmjs.com/package/server-side-fingerprint" target="_blank"><img src="https://img.shields.io/npm/v/server-side-fingerprint.svg" alt="NPM Version" /></a>
-  <a href="https://www.npmjs.com/package/server-side-fingerprint" target="_blank"><img src="https://img.shields.io/npm/l/server-side-fingerprint.svg" alt="Package License" /></a>
-</p>
+[![npm version](https://img.shields.io/npm/v/server-side-fingerprint.svg)](https://www.npmjs.com/package/server-side-fingerprint)
+[![license](https://img.shields.io/npm/l/server-side-fingerprint.svg)](https://www.npmjs.com/package/server-side-fingerprint)
 
-### Table of contents
+Generates a fingerprint hash of the machine your Node.js code runs on, using
+data from the `node:os` module. The same machine and user give the same hash.
 
-- [Installation](#Installation)
-- [Description](#Description)
-- [Usage example](#Usage-example)
-- [API](#API)
-  - [Types](#Types)
-  - [generateFingerprint](#generateFingerprint)
+Works with both `import` and `require`. Requires Node.js 18 or newer.
 
-### Installation
+## Installation
 
 ```console
 npm i server-side-fingerprint
 ```
 
-### Description
-
-Node.js library for generating server-side MD5 fingerprint hash from the
-operating system's data that looks like this:
-
-```json
-{
-  "EOL": "\n",
-  "availableParallelism": 8,
-  "arch": "arm64",
-  "cpuInfo": [
-    {
-      "model": "Apple M1",
-      "speed": 24
-    },
-    {
-      "model": "Apple M1",
-      "speed": 24
-    },
-    {
-      "model": "Apple M1",
-      "speed": 24
-    },
-    {
-      "model": "Apple M1",
-      "speed": 24
-    },
-    {
-      "model": "Apple M1",
-      "speed": 24
-    },
-    {
-      "model": "Apple M1",
-      "speed": 24
-    },
-    {
-      "model": "Apple M1",
-      "speed": 24
-    },
-    {
-      "model": "Apple M1",
-      "speed": 24
-    }
-  ],
-  "devNull": "/dev/null",
-  "endianness": "LE",
-  "homedir": "/Users/datomarjanidze",
-  "hostname": "Datos-MacBook-Air.local",
-  "machine": "arm64",
-  "platform": "darwin",
-  "release": "23.1.0",
-  "tmpdir": "/var/folders/9w/gl_7whfjvxw7h3ftnvz48s3c0000gn/T",
-  "totalmem": 8181934592,
-  "type": "Darwin",
-  "userInfo": {
-    "uid": 555,
-    "gid": 41,
-    "username": "datomarjanidze",
-    "homedir": "/Users/datomarjanidze",
-    "shell": "/bin/bash"
-  },
-  "version": "Darwin Kernel Version 23.1.0: Mon Mar  6 20:00:40 PST 2023; root:xnu-8791.102.1~5/RELEASE_ARM64_T8103"
-}
-```
-
-### Usage example
+## Usage
 
 ```ts
 import { generateFingerprint } from 'server-side-fingerprint'
 
-const fingerprint = generateFingerprint()
-console.log(fingerprint) // 'a923cd82ad685819e1bcbd3acbab179f'
+generateFingerprint()
+// 'a8dcbd41d881bd32d26956c0f87de53b51aa4cf3dbc613931e248c641144acf7'
+
+generateFingerprint({ algorithm: 'md5' })
+// 'dd92f2efbef99710a3aad4c148fe4581'
+
+// Keep the same fingerprint after OS updates
+generateFingerprint({ exclude: ['release', 'version'] })
 ```
 
-### API
+## What goes into the hash
 
-#### Types
+`generateFingerprintData()` returns the data that gets hashed. On a Mac it
+looks like this:
 
-```ts
-import { UserInfo, CpuInfo } from 'node:os'
-
-interface FingerprintData {
-  EOL: string
-  availableParallelism: number
-  arch: string
-  cpuInfo: CpuPartialInfo[]
-  devNull: string
-  endianness: string
-  homedir: string
-  hostname: string
-  machine: string
-  platform: string
-  release: string
-  tmpdir: string
-  totalmem: number
-  type: string
-  userInfo: UserInfo<string>
-  version: string
+```json
+{
+  "arch": "arm64",
+  "cpus": ["Apple M4", "Apple M4", "Apple M4", "Apple M4"],
+  "endianness": "LE",
+  "hostname": "my-laptop.local",
+  "machine": "arm64",
+  "platform": "darwin",
+  "release": "25.5.0",
+  "totalmem": 17179869184,
+  "type": "Darwin",
+  "userInfo": {
+    "username": "john",
+    "uid": 501,
+    "gid": 20,
+    "homedir": "/Users/john",
+    "shell": "/bin/bash"
+  },
+  "version": "Darwin Kernel Version 25.5.0: ..."
 }
-
-type CpuPartialInfo = Pick<CpuInfo, 'model' | 'speed'>
 ```
 
-#### generateFingerprint()
+The fingerprint changes when any of these change. For example, when the
+hostname is renamed, the OS is updated, or the code runs as a different
+user. Use the `exclude` option to leave out the fields you don't care about.
 
-- Returns: `string`
+## API
 
-Generates the fingerprint.
+### generateFingerprint(options?)
 
-#### generateFingerprintData()
+- `options.algorithm` - any hash algorithm supported by `crypto.createHash`.
+  Default: `'sha256'`.
+- `options.exclude` - list of fields from `FingerprintData` to leave out of the
+  hash. Default: `[]`.
+- Returns: `string` (hex)
+
+Throws if the algorithm isn't supported.
+
+### generateFingerprintData()
 
 - Returns: `FingerprintData`
 
-Generates the data that is used for fingerprint creation.
+### Types
+
+```ts
+interface FingerprintData {
+  arch: string
+  cpus: string[] // CPU model of each logical core
+  endianness: 'BE' | 'LE'
+  hostname: string
+  machine: string
+  platform: NodeJS.Platform
+  release: string
+  totalmem: number
+  type: string
+  userInfo: {
+    username: string
+    uid: number
+    gid: number
+    homedir: string
+    shell: string | null
+  }
+  version: string
+}
+
+type FingerprintField = keyof FingerprintData
+
+interface FingerprintOptions {
+  algorithm?: string
+  exclude?: FingerprintField[]
+}
+```
+
+## Upgrading from 1.x
+
+Version 2 gives different hashes than version 1, so any stored fingerprints
+need to be generated again. See [CHANGELOG.md](CHANGELOG.md) for details.
+
+## License
+
+ISC
