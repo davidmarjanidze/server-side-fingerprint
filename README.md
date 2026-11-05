@@ -107,11 +107,6 @@ interface FingerprintOptions {
 }
 ```
 
-## Upgrading from 1.x
-
-Version 2 gives different hashes than version 1, so any stored fingerprints
-need to be generated again. See [CHANGELOG.md](CHANGELOG.md) for details.
-
 ## License
 
 ISC
