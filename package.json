@@ -1,6 +1,6 @@
 {
   "name": "server-side-fingerprint",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Generate a stable fingerprint hash of a server from its operating system data.",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -32,7 +32,7 @@
     "test": "node --test test/*.test.js",
     "npm-publish": "npm run lint && npm run build && npm test && npm publish"
   },
-  "author": "Dato Marjanidze",
+  "author": "David Marjanidze",
   "license": "ISC",
   "homepage": "https://github.com/davidmarjanidze/server-side-fingerprint#readme",
   "repository": {
